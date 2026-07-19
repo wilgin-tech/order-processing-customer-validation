@@ -1,0 +1,676 @@
+{
+  "name": "Order Processing & Customer Validation Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        -224
+      ],
+      "id": "4cb5161e-fdc9-4d0d-a540-199a9ec311ef",
+      "name": "Start Workflow"
+    },
+    {
+      "parameters": {
+        "url": "https://dummyjson.com/carts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -224,
+        -320
+      ],
+      "id": "b8066245-e7b2-491d-89f3-c502dcd2cb2a",
+      "name": "Get Orders"
+    },
+    {
+      "parameters": {
+        "url": "https://dummyjson.com/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -224,
+        -128
+      ],
+      "id": "96be1c20-9ae9-49cb-9e00-4f27b8a7c748",
+      "name": "Get Customers"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "customer_id",
+              "field2": "customer_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        432,
+        -224
+      ],
+      "id": "02934a7e-9874-4ee8-9cd5-498f59aec6f1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "carts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -320
+      ],
+      "id": "9ef5f865-16a2-4366-9921-176aef26366e",
+      "name": "Split Orders"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -128
+      ],
+      "id": "f060bae5-0af9-4b9b-8a5b-e20da62c7e8b",
+      "name": "Split Customers"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "635611b0-4624-4c16-9973-b711959592df",
+              "name": "order_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "62090913-4fe0-4793-bd2d-84df309f1349",
+              "name": "customer_id",
+              "value": "={{ $json.userId }}",
+              "type": "number"
+            },
+            {
+              "id": "dd92f79c-02ed-4692-a9df-a2805c6b8198",
+              "name": "products",
+              "value": "={{ $json.products }}",
+              "type": "array"
+            },
+            {
+              "id": "2166458d-6a5c-4a32-b399-95c5b11884b4",
+              "name": "order_total",
+              "value": "={{ $json.total }}",
+              "type": "number"
+            },
+            {
+              "id": "627545cf-d9e5-41c4-8442-0e244a7e214b",
+              "name": "total_products",
+              "value": "={{ $json.products.length }}",
+              "type": "number"
+            },
+            {
+              "id": "54b3ae04-8d04-4c92-974b-0b293438d654",
+              "name": "priority",
+              "value": "={{ $json.total >= 200 ? 'High' : ($json.total >= 100 ? 'Medium' : 'Normal') }}",
+              "type": "string"
+            },
+            {
+              "id": "e082f726-8859-46a0-8a84-cd2b1d6deace",
+              "name": "high_value_order",
+              "value": "={{ $json.total >= 200 }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -320
+      ],
+      "id": "d8a5671e-ea2e-4367-becb-9ba9a671e2e3",
+      "name": "NormalizeOrderData"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62090913-4fe0-4793-bd2d-84df309f1349",
+              "name": "customer_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "dd92f79c-02ed-4692-a9df-a2805c6b8198",
+              "name": "customer_name",
+              "value": "={{ $json.firstName + ' ' + $json.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "aa6921d2-0fe2-4cc4-972c-56b355097063",
+              "name": "customer_email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "e082f726-8859-46a0-8a84-cd2b1d6deace",
+              "name": "customer_phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -128
+      ],
+      "id": "a5534b25-7fc7-4d46-a163-a950c9b74145",
+      "name": "NormalizeCustomerData"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5e07769c-4529-494b-971a-6b88373ae067",
+              "leftValue": "={{ $json.customer_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "91f7dda1-81b4-4397-8f80-5de9085e544c",
+              "leftValue": "={{ $json.total_products }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "6b65b1e4-89d2-4650-af8a-24d74d7077db",
+              "leftValue": "={{ $json.order_total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        -224
+      ],
+      "id": "96ca13c9-eff9-46f3-9873-4a6fe9b5af3c",
+      "name": "ValidateOrder"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "278bf9a4-cb15-4c43-a7d6-0cad12895a91",
+              "leftValue": "={{ $json.order_total }}",
+              "rightValue": 500,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -320
+      ],
+      "id": "41ebcf12-129b-4b8c-8d63-35a8a261a741",
+      "name": "HighValueOrder"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e59e0cfe-5be5-4772-ae3f-efe754fa7cda",
+              "name": "processing_status",
+              "value": "Pending Manager Approval",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        -512
+      ],
+      "id": "55b13187-49bf-4793-8ac6-8e87aa638edc",
+      "name": "ManagerReview"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "411dbb66-56be-4bb1-b4f0-2d69ee1bcb61",
+              "leftValue": "={{ $json.order_total }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1008,
+        -224
+      ],
+      "id": "534007e1-c3c1-40c3-99d4-0f19c8faafb2",
+      "name": "PriorityOrder"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0a251289-58e5-497e-bd0a-a1ec01d4372a",
+              "name": "processing_status",
+              "value": "Priority Queue",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        -320
+      ],
+      "id": "f30a4f97-5d1f-4014-82be-db3775f79d4f",
+      "name": "PriorityProcessing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "439bedc6-e8c8-4e38-92a8-08ec01fc973b",
+              "name": "processing_status",
+              "value": "Ready for Fulfillment",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1216,
+        -128
+      ],
+      "id": "4ba4c237-cdaf-4e07-b41f-1fb962f71492",
+      "name": "StandardProcessing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea15f64a-5fa9-4a95-916c-bd89729ab9b5",
+              "name": "processed_at",
+              "value": "={{ $now.toFormat('MM/dd/yyyy HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "29abb095-27b1-421a-aadc-f0aa0e3d5d98",
+              "name": "workflow_result",
+              "value": "Order Routed Successfully",
+              "type": "string"
+            },
+            {
+              "id": "ce416c8a-dc57-420c-a8c3-50e24c38c05d",
+              "name": "notification_subject",
+              "value": "={{ `Order ${$json.order_id} - ${$json.processing_status}` }}",
+              "type": "string"
+            },
+            {
+              "id": "2d831ebd-e4a4-4de0-831e-64a699c8c9fc",
+              "name": "notification_message",
+              "value": "={{ `Order ${$json.order_id} for ${$json.customer_name} has been assigned to \"${$json.processing_status}\". Order total: $${Number($json.order_total).toFixed(2)}.` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1440,
+        -320
+      ],
+      "id": "9551e902-da08-433c-8c35-cddf77938992",
+      "name": "PrepareAuditRecord"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f25b8a8f-fd6f-4081-b561-d66971ffbf92",
+              "name": "processing_status",
+              "value": "Invalid Order",
+              "type": "string"
+            },
+            {
+              "id": "5dc64f6e-34e7-48db-8417-d8d10228e1e6",
+              "name": "validation_result",
+              "value": "Failed",
+              "type": "string"
+            },
+            {
+              "id": "a7604512-71c6-48e0-8308-04d73d6594c1",
+              "name": "error_reason",
+              "value": "={{(() => {const reasons=[];if(!$json.customer_email)reasons.push('Missing customer email');if(!$json.total_products||$json.total_products<=0)reasons.push('No products found');if(!$json.order_total||$json.order_total<=0)reasons.push('Invalid order total');return reasons.length?reasons.join(', '):'Unknown validation error';})()}}",
+              "type": "string"
+            },
+            {
+              "id": "be0964ff-9b0c-482b-a6ae-ccb05bc2cb18",
+              "name": "processed_at",
+              "value": "={{ $now.toFormat('MM/dd/yyyy HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "9a61c66f-e4ce-4a12-83a4-2622cc3a7112",
+              "name": "notification_subject",
+              "value": "={{ `Invalid Order ${$json.order_id}` }}",
+              "type": "string"
+            },
+            {
+              "id": "6c615439-e7e7-403e-ab66-d20e3e6b2d62",
+              "name": "notification_message",
+              "value": "={{(() => {const reasons=[];if(!$json.customer_email)reasons.push('Missing customer email');if(!$json.total_products||$json.total_products<=0)reasons.push('No products found');if(!$json.order_total||$json.order_total<=0)reasons.push('Invalid order total');return `Order ${$json.order_id} failed validation. Reason: ${reasons.length?reasons.join(', '):'Unknown validation error'}.`;})()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        -128
+      ],
+      "id": "e17d6040-a538-4057-b2bf-5220b27fa964",
+      "name": "InvalidOrder"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Orders": {
+      "main": [
+        [
+          {
+            "node": "Split Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Customers": {
+      "main": [
+        [
+          {
+            "node": "Split Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Orders": {
+      "main": [
+        [
+          {
+            "node": "NormalizeOrderData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Customers": {
+      "main": [
+        [
+          {
+            "node": "NormalizeCustomerData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "ValidateOrder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizeOrderData": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizeCustomerData": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ValidateOrder": {
+      "main": [
+        [
+          {
+            "node": "HighValueOrder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "InvalidOrder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HighValueOrder": {
+      "main": [
+        [
+          {
+            "node": "ManagerReview",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PriorityOrder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PriorityOrder": {
+      "main": [
+        [
+          {
+            "node": "PriorityProcessing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "StandardProcessing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PriorityProcessing": {
+      "main": [
+        [
+          {
+            "node": "PrepareAuditRecord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ManagerReview": {
+      "main": [
+        [
+          {
+            "node": "PrepareAuditRecord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "StandardProcessing": {
+      "main": [
+        [
+          {
+            "node": "PrepareAuditRecord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c3975dc0-edce-41ee-aaed-72381273596a",
+  "meta": {
+    "instanceId": "d57d27f5602264ec790ab359b5392fd3fbd3447574b1ee474ab4940151166ee7"
+  },
+  "nodeGroups": [],
+  "id": "YB4AkHDWufKB9n22",
+  "tags": []
+}
